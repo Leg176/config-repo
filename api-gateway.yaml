@@ -1,0 +1,52 @@
+spring:
+  main:
+    web-application-type: reactive
+
+  cloud:
+    gateway:
+      forwarded:
+        enabled: true
+
+      discovery:
+        locator:
+          enabled: true
+
+      routes:
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/v1/users/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: userServiceCircuitBreaker
+                fallbackUri: forward:/fallback/users
+
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/mail/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: notificationServiceCircuitBreaker
+                fallbackUri: forward:/fallback/mail
+
+logging:
+  level:
+    io.github.resilience4j: DEBUG
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      userServiceCircuitBreaker:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+
+      notificationServiceCircuitBreaker:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
