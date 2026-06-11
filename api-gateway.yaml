@@ -12,14 +12,14 @@ spring:
           enabled: true
 
       routes:
-        - id: user-service
-          uri: lb://user-service
+        - id: main-service
+          uri: lb://main-service
           predicates:
-            - Path=/api/v1/users/**
+            - Path=/api/v1/users/**,/api/v1/users
           filters:
             - name: CircuitBreaker
               args:
-                name: userServiceCircuitBreaker
+                name: mainServiceCircuitBreaker
                 fallbackUri: forward:/fallback/users
 
         - id: notification-service
@@ -39,7 +39,7 @@ logging:
 resilience4j:
   circuitbreaker:
     instances:
-      userServiceCircuitBreaker:
+      mainServiceCircuitBreaker:
         slidingWindowSize: 10
         minimumNumberOfCalls: 5
         failureRateThreshold: 50
